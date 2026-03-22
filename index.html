@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="오늘의 컬러로 당신의 무드를 발견하세요">
+  <meta property="og:title" content="오늘의 컬러 무드">
+  <meta property="og:description" content="7번의 선택으로 찾는 나만의 컬러">
+  <title>오늘의 컬러 무드</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* ===== TOKENS ===== */
+    :root {
+      --bg:           #FAFAF8;
+      --bg-card:      #FFFFFF;
+      --text-primary: #1A1A1A;
+      --text-muted:   #8A8A8A;
+      --border:       rgba(0,0,0,0.08);
+      --radius-card:  999px;
+      --radius-btn:   100px;
+      --shadow-card:  0 4px 28px rgba(0,0,0,0.09);
+      --shadow-hover: 0 16px 48px rgba(0,0,0,0.16);
+      --transition:   320ms cubic-bezier(0.4, 0, 0.2, 1);
+      --font:         'Noto Sans KR', -apple-system, sans-serif;
+    }
+
+    /* ===== RESET ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: var(--font); cursor: pointer; border: none; background: none; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== APP ROOT ===== */
+    #app {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== SCREEN BASE ===== */
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 420ms ease, transform 420ms ease;
+    }
+    .screen--visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===========================
+       INTRO SCREEN
+    =========================== */
+    .screen--intro {
+      align-items: center;
+      justify-content: center;
+      padding: 48px 28px;
+      text-align: center;
+    }
+
+    .intro__eyebrow {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+    }
+
+    .intro__title {
+      font-size: clamp(2.2rem, 8vw, 4rem);
+      font-weight: 300;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+      margin-bottom: 24px;
+      color: var(--text-primary);
+    }
+
+    .intro__title em {
+      font-style: normal;
+      position: relative;
+      display: inline-block;
+    }
+
+    .intro__title em::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--text-primary);
+      opacity: 0.15;
+      border-radius: 2px;
+    }
+
+    .intro__sub {
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.9;
+      color: var(--text-muted);
+      margin-bottom: 52px;
+      max-width: 300px;
+    }
+
+    .intro__color-preview {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 52px;
+      justify-content: center;
+    }
+
+    .intro__dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      animation: pulse-dot 2.4s ease-in-out infinite;
+    }
+    .intro__dot:nth-child(2) { animation-delay: 0.3s; }
+    .intro__dot:nth-child(3) { animation-delay: 0.6s; }
+    .intro__dot:nth-child(4) { animation-delay: 0.9s; }
+    .intro__dot:nth-child(5) { animation-delay: 1.2s; }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.25); }
+    }
+
+    /* ===========================
+       ROUND SCREEN
+    =========================== */
+    .screen--round {
+      padding: 0;
+    }
+
+    .round-header {
+      padding: 32px 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .round-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .round-label {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .round-count {
+      font-size: 0.75rem;
+      font-weight: 400;
+      color: var(--text-muted);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 2px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar__fill {
+      height: 100%;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: width 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .round-prompt {
+      font-size: 1.15rem;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+
+    /* Color Card Grid — vertical stack of horizontal ovals */
+    .color-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 8px 24px 40px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .color-card {
+      width: 100%;
+      height: 140px;
+      border-radius: var(--radius-card);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition), box-shadow var(--transition);
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+      flex-shrink: 0;
+    }
+
+    .color-card:hover {
+      transform: scale(1.025) translateY(-3px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .color-card:focus-visible {
+      box-shadow: var(--shadow-hover), 0 0 0 3px rgba(255,255,255,0.7), 0 0 0 5px var(--text-primary);
+    }
+
+    .color-card:active {
+      transform: scale(0.975);
+      transition-duration: 100ms;
+    }
+
+    .color-card__info {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 20px 32px;
+      background: linear-gradient(135deg, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.06) 100%);
+      transition: background var(--transition);
+    }
+
+    .color-card:hover .color-card__info,
+    .color-card:focus-visible .color-card__info {
+      background: linear-gradient(135deg, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.14) 100%);
+    }
+
+    .color-card__name {
+      font-size: 1.05rem;
+      font-weight: 500;
+      color: #fff;
+      letter-spacing: -0.01em;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.25);
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .color-card__name-en {
+      font-size: 0.72rem;
+      font-weight: 300;
+      color: rgba(255,255,255,0.78);
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.2);
+      text-transform: uppercase;
+    }
+
+    .color-card--selected {
+      transform: scale(0.96) !important;
+      transition-duration: 150ms !important;
+    }
+
+    /* ===========================
+       RESULT SCREEN
+    =========================== */
+    .screen--result {
+      padding: 0;
+    }
+
+    .result-color-band {
+      width: 100%;
+      height: 280px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .result-color-band__inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-end;
+      padding: 28px 32px;
+    }
+
+    .result-color-band__badge {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.22);
+      padding: 6px 16px;
+      border-radius: 100px;
+      backdrop-filter: blur(8px);
+    }
+
+    .result-content {
+      padding: 36px 28px 80px;
+      max-width: 600px;
+      margin: 0 auto;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .result-name {
+      font-size: clamp(1.8rem, 6vw, 2.8rem);
+      font-weight: 300;
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+    }
+
+    .result-sentence {
+      font-size: 1rem;
+      font-weight: 300;
+      line-height: 2;
+      color: var(--text-muted);
+    }
+
+    .result-keywords {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 0.78rem;
+      font-weight: 400;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      border-radius: 100px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Section heading */
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* ── Category color palette ── */
+    .category-palette { display: flex; flex-direction: column; }
+
+    .category-colors {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .cat-color-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .cat-color-swatch {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition);
+      cursor: default;
+    }
+
+    .cat-color-swatch:hover { transform: scale(1.1); }
+
+    .cat-color-swatch--winner {
+      width: 56px;
+      height: 56px;
+      box-shadow: var(--shadow-hover);
+    }
+
+    .cat-color-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .cat-color-name {
+      font-size: 0.88rem;
+      font-weight: 400;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .cat-color-hex {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    .cat-color-winner-badge {
+      font-size: 0.62rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: #fff;
+      background: var(--text-primary);
+      padding: 3px 10px;
+      border-radius: 100px;
+      margin-left: 4px;
+    }
+
+    /* ── Complementary palette ── */
+    .comp-palette { display: flex; flex-direction: column; }
+
+    .comp-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 20px;
+    }
+
+    .comp-swatch {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comp-swatch__circle {
+      border-radius: 50%;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition);
+      cursor: default;
+    }
+
+    .comp-swatch__circle:hover { transform: scale(1.1); }
+
+    .comp-swatch--main .comp-swatch__circle {
+      width: 64px;
+      height: 64px;
+    }
+
+    .comp-swatch--secondary .comp-swatch__circle {
+      width: 48px;
+      height: 48px;
+    }
+
+    .comp-swatch__hex {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.03em;
+    }
+
+    /* ── Product section ── */
+    .product-section { display: flex; flex-direction: column; }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .product-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition), box-shadow var(--transition);
+      border: 1px solid var(--border);
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .product-card__image {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .product-card__image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .product-card__placeholder {
+      font-size: 1.6rem;
+      opacity: 0.22;
+    }
+
+    .product-card__body {
+      padding: 12px;
+    }
+
+    .product-card__name {
+      font-size: 0.75rem;
+      font-weight: 400;
+      line-height: 1.45;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .product-card__price {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .product-card__link {
+      display: block;
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 8px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .product-card__link:hover {
+      background: var(--text-primary);
+      color: #fff;
+    }
+
+    /* Action buttons */
+    .result-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ===========================
+       BUTTONS
+    =========================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 40px;
+      border-radius: var(--radius-btn);
+      font-size: 0.88rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn--primary {
+      background: var(--text-primary);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.14);
+    }
+
+    .btn--primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 32px rgba(0,0,0,0.2);
+    }
+
+    .btn--primary:active {
+      transform: translateY(0);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn--ghost:hover {
+      color: var(--text-primary);
+      border-color: rgba(0,0,0,0.2);
+    }
+
+    /* ===========================
+       TOAST
+    =========================== */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text-primary);
+      color: #fff;
+      padding: 13px 28px;
+      border-radius: var(--radius-btn);
+      font-size: 0.83rem;
+      opacity: 0;
+      transition: opacity 300ms ease, transform 300ms ease;
+      pointer-events: none;
+      z-index: 9999;
+      white-space: nowrap;
+    }
+
+    .toast--visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===========================
+       DESKTOP OVERRIDES
+    =========================== */
+    @media (min-width: 768px) {
+      .screen--result {
+        flex-direction: row;
+        min-height: 100dvh;
+      }
+
+      .result-color-band {
+        width: 380px;
+        height: auto;
+        min-height: 100dvh;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        align-self: flex-start;
+      }
+
+      .result-color-band__inner {
+        align-items: flex-start;
+        padding: 48px 36px;
+      }
+
+      .result-content {
+        padding: 56px 48px 80px;
+        max-width: 580px;
+      }
+
+      .round-header {
+        padding: 40px 40px 28px;
+        max-width: 600px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .color-grid {
+        padding: 8px 40px 60px;
+      }
+
+      .result-actions {
+        flex-direction: row;
+      }
+
+      .btn { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" role="main" aria-live="polite"></div>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ================================================
+       COLOR DATA — 30 curated colors
+       sentence: "오늘 당신에게는 이 컬러가 필요해요" 톤의 감성 문장
+    ================================================ */
+    const COLOR_DATA = [
+      /* ── 활기찬 ── */
+      {
+        hex: '#FF6B6B',
+        name: '산호빛 열정',
+        nameEn: 'Coral Passion',
+        keywords: ['열정', '에너지', '생동감', '용기'],
+        sentence: '오늘 당신에게는 뜨겁게 타오르는 열정의 컬러가 필요해요.\n억눌렀던 에너지를 꺼내, 원하는 것을 향해 과감하게 나아가도 좋은 날이에요.',
+        complementary: ['#6BFFD8', '#FFD96B'],
+        category: '활기찬'
+      },
+      {
+        hex: '#F4D03F',
+        name: '햇살 노란빛',
+        nameEn: 'Sunny Yellow',
+        keywords: ['기쁨', '낙천', '밝음', '유쾌함'],
+        sentence: '오늘 당신에게는 환하게 쏟아지는 햇살의 컬러가 필요해요.\n가볍고 밝은 마음으로, 오늘 하루를 온전히 즐겨보세요.',
+        complementary: ['#3F8BF4', '#A83FF4'],
+        category: '활기찬'
+      },
+      {
+        hex: '#C0392B',
+        name: '가넷 붉은빛',
+        nameEn: 'Garnet Red',
+        keywords: ['강렬함', '결단', '열정', '카리스마'],
+        sentence: '오늘 당신에게는 단단하고 강인한 가넷의 컬러가 필요해요.\n자신의 존재감을 당당하게 드러낼 용기가 필요한 순간이에요.',
+        complementary: ['#2BC0AF', '#2B6BC0'],
+        category: '활기찬'
+      },
+      {
+        hex: '#FF9FF3',
+        name: '버블검 핑크',
+        nameEn: 'Bubblegum Pink',
+        keywords: ['유쾌함', '장난기', '자유로움', '발랄함'],
+        sentence: '오늘 당신에게는 톡톡 튀는 유쾌함의 컬러가 필요해요.\n진지함을 잠시 내려두고 가볍게, 즐겁게 살아도 괜찮아요.',
+        complementary: ['#9FF3FF', '#F3FF9F'],
+        category: '활기찬'
+      },
+      {
+        hex: '#E74C3C',
+        name: '포피 레드',
+        nameEn: 'Poppy Red',
+        keywords: ['열정', '명료함', '과감함', '선명함'],
+        sentence: '오늘 당신에게는 선명하고 과감한 빨강의 컬러가 필요해요.\n흔들리지 않는 자기 자신으로 오늘을 강렬하게 살아갈 때예요.',
+        complementary: ['#3CE7D8', '#E7C13C'],
+        category: '활기찬'
+      },
+      /* ── 차분한 ── */
+      {
+        hex: '#4A90D9',
+        name: '새벽 하늘빛',
+        nameEn: 'Dawn Blue',
+        keywords: ['고요함', '신뢰', '깊이', '안정'],
+        sentence: '오늘 당신에게는 새벽처럼 고요하고 맑은 파랑의 컬러가 필요해요.\n흔들리는 감정을 가라앉히고, 내면의 고요함으로 돌아갈 시간이에요.',
+        complementary: ['#D9A44A', '#A4D94A'],
+        category: '차분한'
+      },
+      {
+        hex: '#2C3E6B',
+        name: '밤바다 깊이',
+        nameEn: 'Midnight Navy',
+        keywords: ['내성', '고독', '집중', '지혜'],
+        sentence: '오늘 당신에게는 밤바다처럼 깊고 조용한 컬러가 필요해요.\n혼자만의 고요 속에서 스스로를 깊이 들여다봐도 좋아요.',
+        complementary: ['#6B4E2C', '#2C6B52'],
+        category: '차분한'
+      },
+      {
+        hex: '#D5C4A1',
+        name: '린넨 모래빛',
+        nameEn: 'Linen Sand',
+        keywords: ['평온', '여백', '미니멀', '자연스러움'],
+        sentence: '오늘 당신에게는 여백과 자연스러움의 컬러가 필요해요.\n아무것도 더하지 않아도 충분한, 있는 그대로의 오늘을 받아들여 보세요.',
+        complementary: ['#A1B4D5', '#D5A1A1'],
+        category: '차분한'
+      },
+      {
+        hex: '#BDC3C7',
+        name: '안개 실버빛',
+        nameEn: 'Misty Silver',
+        keywords: ['차분함', '성숙함', '사려깊음', '균형'],
+        sentence: '오늘 당신에게는 안개처럼 부드럽고 차분한 컬러가 필요해요.\n모든 것을 천천히, 느긋하게 바라볼 여유가 필요한 날이에요.',
+        complementary: ['#C7B3BD', '#B3C7BD'],
+        category: '차분한'
+      },
+      {
+        hex: '#34495E',
+        name: '슬레이트 청회',
+        nameEn: 'Slate Grey',
+        keywords: ['신중함', '전문성', '절제', '깊이'],
+        sentence: '오늘 당신에게는 절제되고 신중한 청회의 컬러가 필요해요.\n넘치지도 모자라지도 않는 균형감으로 오늘을 살아가세요.',
+        complementary: ['#5E4234', '#34595E'],
+        category: '차분한'
+      },
+      {
+        hex: '#F0E6D3',
+        name: '캐시미어 크림',
+        nameEn: 'Cashmere Cream',
+        keywords: ['고요함', '섬세함', '우아함', '편안함'],
+        sentence: '오늘 당신에게는 캐시미어처럼 포근하고 섬세한 컬러가 필요해요.\n자신을 부드럽게 보듬어주는 시간이 필요한 순간이에요.',
+        complementary: ['#D3E6F0', '#E6D3F0'],
+        category: '차분한'
+      },
+      {
+        hex: '#1E8449',
+        name: '숲속 에버그린',
+        nameEn: 'Forest Evergreen',
+        keywords: ['지속성', '회복력', '고요함', '영원'],
+        sentence: '오늘 당신에게는 사계절 푸른 숲의 컬러가 필요해요.\n흔들리지 않는 단단한 생명력으로 오늘 하루를 조용히 버텨내세요.',
+        complementary: ['#49441E', '#1E4449'],
+        category: '차분한'
+      },
+      /* ── 낭만적인 ── */
+      {
+        hex: '#E8A0BF',
+        name: '장미 첫빛',
+        nameEn: 'First Rose',
+        keywords: ['낭만', '설렘', '부드러움', '사랑'],
+        sentence: '오늘 당신에게는 막 피어오르는 장미의 컬러가 필요해요.\n설레는 감정을 부끄러워 말고, 달콤한 기대를 품어도 좋은 날이에요.',
+        complementary: ['#A0E8C9', '#E8D1A0'],
+        category: '낭만적인'
+      },
+      {
+        hex: '#F1948A',
+        name: '복숭아 홍조',
+        nameEn: 'Peach Blush',
+        keywords: ['수줍음', '설렘', '섬세함', '친밀감'],
+        sentence: '오늘 당신에게는 복숭아처럼 수줍고 따뜻한 컬러가 필요해요.\n소중한 사람과의 작은 온기가 오늘 당신에게 큰 힘이 될 거예요.',
+        complementary: ['#8AF1C2', '#C28AF1'],
+        category: '낭만적인'
+      },
+      {
+        hex: '#85C1E9',
+        name: '수채화 파랑',
+        nameEn: 'Watercolor Blue',
+        keywords: ['감수성', '상상력', '꿈', '부드러움'],
+        sentence: '오늘 당신에게는 번지는 수채화처럼 감수성 가득한 컬러가 필요해요.\n감정을 억누르지 말고, 자유롭게 흘러가도록 두어도 괜찮아요.',
+        complementary: ['#E9C285', '#C285E9'],
+        category: '낭만적인'
+      },
+      {
+        hex: '#A569BD',
+        name: '라일락 연보라',
+        nameEn: 'Lilac Mauve',
+        keywords: ['낭만', '감성', '몽상', '부드러움'],
+        sentence: '오늘 당신에게는 라일락처럼 달콤하고 몽환적인 컬러가 필요해요.\n그리운 감성에 잠겨, 잠시 꿈꾸어도 좋은 날이에요.',
+        complementary: ['#BDAB69', '#69BDA5'],
+        category: '낭만적인'
+      },
+      /* ── 신비로운 ── */
+      {
+        hex: '#7B5EA7',
+        name: '보랏빛 신비',
+        nameEn: 'Violet Mystery',
+        keywords: ['신비로움', '직관', '창의성', '깊이'],
+        sentence: '오늘 당신에게는 아직 드러나지 않은 깊은 이야기를 품은 보라의 컬러가 필요해요.\n내면의 신비로운 에너지를 신뢰하고 따라가도 좋아요.',
+        complementary: ['#A7935E', '#5EA79B'],
+        category: '신비로운'
+      },
+      {
+        hex: '#8E44AD',
+        name: '라벤더 황혼',
+        nameEn: 'Lavender Dusk',
+        keywords: ['우아함', '영감', '몽환', '풍요'],
+        sentence: '오늘 당신에게는 황혼의 보랏빛처럼 풍요로운 영감의 컬러가 필요해요.\n깊은 감성과 창의적인 직관이 당신 안에서 피어오르고 있어요.',
+        complementary: ['#AD8E44', '#44AD8E'],
+        category: '신비로운'
+      },
+      {
+        hex: '#6C3483',
+        name: '다크 포도빛',
+        nameEn: 'Dark Grape',
+        keywords: ['신비', '집중', '내면', '통찰'],
+        sentence: '오늘 당신에게는 숙성된 포도주처럼 깊고 그윽한 컬러가 필요해요.\n시간이 지날수록 더욱 깊어지는 당신만의 이야기를 믿어보세요.',
+        complementary: ['#836C34', '#346C83'],
+        category: '신비로운'
+      },
+      {
+        hex: '#2E4057',
+        name: '미드나잇 인디고',
+        nameEn: 'Midnight Indigo',
+        keywords: ['깊이', '철학', '고독', '성찰'],
+        sentence: '오늘 당신에게는 별빛 가득한 밤하늘의 인디고 컬러가 필요해요.\n가장 깊은 자기 자신과 마주하며, 중요한 무언가를 깨달아갈 시간이에요.',
+        complementary: ['#574020', '#205748'],
+        category: '신비로운'
+      },
+      /* ── 따뜻한 ── */
+      {
+        hex: '#F7C5A0',
+        name: '살구꽃 온기',
+        nameEn: 'Apricot Warmth',
+        keywords: ['포근함', '따스함', '위로', '편안함'],
+        sentence: '오늘 당신에게는 살구꽃처럼 포근하고 따뜻한 온기의 컬러가 필요해요.\n누군가를 조용히 위로하거나, 스스로를 다독여줄 여유가 필요한 날이에요.',
+        complementary: ['#A0C5F7', '#C5F7A0'],
+        category: '따뜻한'
+      },
+      {
+        hex: '#E67E22',
+        name: '호박 노을빛',
+        nameEn: 'Amber Glow',
+        keywords: ['따뜻함', '활력', '풍요로움', '친근함'],
+        sentence: '오늘 당신에게는 황금빛 노을처럼 풍요롭고 따뜻한 컬러가 필요해요.\n주변을 환하게 밝히는 당신의 온기를 아낌없이 나누어도 좋아요.',
+        complementary: ['#2272E6', '#22E6D5'],
+        category: '따뜻한'
+      },
+      {
+        hex: '#27AE60',
+        name: '이끼 초록빛',
+        nameEn: 'Moss Green',
+        keywords: ['성장', '안정', '풍요', '치유'],
+        sentence: '오늘 당신에게는 이끼처럼 조용하지만 강인한 초록의 컬러가 필요해요.\n천천히, 그러나 분명하게 성장하고 있는 자신을 믿어주세요.',
+        complementary: ['#AE6027', '#2758AE'],
+        category: '따뜻한'
+      },
+      {
+        hex: '#A0522D',
+        name: '테라코타 흙빛',
+        nameEn: 'Terracotta Earth',
+        keywords: ['근거', '정직함', '실용성', '안정감'],
+        sentence: '오늘 당신에게는 흙처럼 진실하고 든든한 테라코타 컬러가 필요해요.\n화려하지 않아도 충분한, 당신 본연의 따뜻함이 오늘의 힘이에요.',
+        complementary: ['#2D7BA0', '#6FA02D'],
+        category: '따뜻한'
+      },
+      {
+        hex: '#FAD7A0',
+        name: '꿀빛 황금',
+        nameEn: 'Honey Gold',
+        keywords: ['풍요', '따뜻함', '밝음', '넉넉함'],
+        sentence: '오늘 당신에게는 꿀처럼 달콤하고 넉넉한 황금빛 컬러가 필요해요.\n풍요로운 마음으로 오늘 하루를 천천히, 충분히 누려보세요.',
+        complementary: ['#A0C6FA', '#C6FAA0'],
+        category: '따뜻한'
+      },
+      {
+        hex: '#EDBB99',
+        name: '베이지 누드',
+        nameEn: 'Beige Nude',
+        keywords: ['자연스러움', '솔직함', '여유', '친숙함'],
+        sentence: '오늘 당신에게는 꾸밈없이 자연스러운 누드의 컬러가 필요해요.\n있는 그대로의 자신이 가장 아름다운 날이에요.',
+        complementary: ['#99C4ED', '#B4ED99'],
+        category: '따뜻한'
+      },
+      /* ── 상쾌한 ── */
+      {
+        hex: '#88C9A1',
+        name: '민트 새잎',
+        nameEn: 'Fresh Mint',
+        keywords: ['상쾌함', '청신함', '회복', '시작'],
+        sentence: '오늘 당신에게는 새잎 돋듯 상쾌하고 맑은 민트의 컬러가 필요해요.\n모든 것을 새롭게 시작할 수 있는 청신한 에너지가 지금 당신 안에 있어요.',
+        complementary: ['#C9A188', '#A188C9'],
+        category: '상쾌한'
+      },
+      {
+        hex: '#1ABC9C',
+        name: '에메랄드 물빛',
+        nameEn: 'Emerald Water',
+        keywords: ['자유', '탐험', '신선함', '개방'],
+        sentence: '오늘 당신에게는 끝없이 펼쳐진 에메랄드 바다의 컬러가 필요해요.\n가능성을 향해 두려움 없이 뛰어들어도 좋을 만큼 자유로운 날이에요.',
+        complementary: ['#BC541A', '#BC1A6F'],
+        category: '상쾌한'
+      },
+      {
+        hex: '#D6EAF8',
+        name: '하늘 연청',
+        nameEn: 'Sky Pale Blue',
+        keywords: ['순수함', '맑음', '개방성', '여유'],
+        sentence: '오늘 당신에게는 이른 아침 맑은 하늘빛 컬러가 필요해요.\n아직 아무것도 쓰이지 않은 순수한 하루가 당신 앞에 펼쳐져 있어요.',
+        complementary: ['#F8ECD6', '#EAF8D6'],
+        category: '상쾌한'
+      },
+      {
+        hex: '#17A589',
+        name: '옥빛 청록',
+        nameEn: 'Jade Teal',
+        keywords: ['균형', '치유', '신선함', '명료함'],
+        sentence: '오늘 당신에게는 옥빛 계곡물처럼 맑고 균형 잡힌 컬러가 필요해요.\n혼란을 씻어내고 가장 맑은 자신으로 돌아갈 시간이에요.',
+        complementary: ['#A55717', '#1742A5'],
+        category: '상쾌한'
+      }
+    ];
+
+    /* ================================================
+       TOURNAMENT ENGINE
+    ================================================ */
+    const TournamentEngine = {
+      TOTAL_ROUNDS: 7,
+      _pool: [],
+      _round: 0,
+      _lastPick: null,
+
+      _shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      },
+
+      init() {
+        this._pool = this._shuffle([...COLOR_DATA]);
+        this._round = 0;
+        this._lastPick = null;
+      },
+
+      nextRound() {
+        this._round++;
+        const opts = [];
+
+        if (this._lastPick) {
+          opts.push(this._lastPick);
+          const idx = this._pool.indexOf(this._lastPick);
+          if (idx !== -1) this._pool.splice(idx, 1);
+        }
+
+        while (opts.length < 3 && this._pool.length > 0) {
+          opts.push(this._pool.shift());
+        }
+
+        return opts;
+      },
+
+      pick(colorObj) {
+        this._lastPick = colorObj;
+        if (this._round >= this.TOTAL_ROUNDS) {
+          return { done: true, winner: colorObj };
+        }
+        return { done: false, winner: null };
+      },
+
+      getProgress() {
+        return { current: this._round, total: this.TOTAL_ROUNDS };
+      }
+    };
+
+    /* ================================================
+       PRODUCT SERVICE  (mock — replace body of getProducts for real API)
+    ================================================ */
+    const ProductService = {
+      _mock: {
+        '활기찬': [
+          { name: '시트러스 바디 미스트', price: '32,000원', image: null, link: '#' },
+          { name: '레드 립 에센스', price: '48,000원', image: null, link: '#' },
+          { name: '에너지 롤온 퍼퓸', price: '27,000원', image: null, link: '#' }
+        ],
+        '차분한': [
+          { name: '캐모마일 나이트 세럼', price: '65,000원', image: null, link: '#' },
+          { name: '화이트 노이즈 향초', price: '38,000원', image: null, link: '#' },
+          { name: '실크 슬리핑 마스크', price: '29,000원', image: null, link: '#' }
+        ],
+        '낭만적인': [
+          { name: '로즈 페탈 토너', price: '42,000원', image: null, link: '#' },
+          { name: '포에틱 오드파르팡', price: '89,000원', image: null, link: '#' },
+          { name: '새틴 핑크 립밤', price: '19,000원', image: null, link: '#' }
+        ],
+        '신비로운': [
+          { name: '블랙 오키드 오일', price: '72,000원', image: null, link: '#' },
+          { name: '문라이트 페이스 미스트', price: '45,000원', image: null, link: '#' },
+          { name: '비올렛 쉐도우 팔레트', price: '55,000원', image: null, link: '#' }
+        ],
+        '따뜻한': [
+          { name: '바닐라 버터 핸드크림', price: '22,000원', image: null, link: '#' },
+          { name: '앰버 빌로우 캔들', price: '44,000원', image: null, link: '#' },
+          { name: '골든 밀크 마스크팩', price: '18,000원', image: null, link: '#' }
+        ],
+        '상쾌한': [
+          { name: '아쿠아 젤 클렌저', price: '34,000원', image: null, link: '#' },
+          { name: '민트 스칼프 에센스', price: '58,000원', image: null, link: '#' },
+          { name: '이너뷰티 그린 파우더', price: '41,000원', image: null, link: '#' }
+        ]
+      },
+
+      /* ── Replace this method to connect real product API ── */
+      async getProducts(colorHex, moodCategory) {
+        return this._mock[moodCategory] ?? this._mock['차분한'];
+      }
+    };
+
+    /* ================================================
+       UI RENDERER
+    ================================================ */
+    const UIRenderer = {
+      _root: null,
+
+      init(id) {
+        this._root = document.getElementById(id);
+      },
+
+      _show(html) {
+        this._root.innerHTML = html;
+        requestAnimationFrame(() => {
+          const s = this._root.querySelector('.screen');
+          if (s) requestAnimationFrame(() => s.classList.add('screen--visible'));
+        });
+      },
+
+      showIntro() {
+        const dots = ['#FF6B6B', '#4A90D9', '#88C9A1', '#F4D03F', '#A569BD'];
+        const dotsHtml = dots.map(c =>
+          `<div class="intro__dot" style="background:${c};"></div>`
+        ).join('');
+
+        this._show(`
+          <section class="screen screen--intro" role="main">
+            <p class="intro__eyebrow">Color Mood</p>
+            <h1 class="intro__title">오늘의 <em>컬러</em>를<br>찾아드릴게요</h1>
+            <p class="intro__sub">7번의 선택이<br>지금 당신의 감성을 보여줍니다.</p>
+            <div class="intro__color-preview" aria-hidden="true">${dotsHtml}</div>
+            <button class="btn btn--primary" id="startBtn">시작하기</button>
+          </section>
+        `);
+
+        document.getElementById('startBtn').addEventListener('click', () => App.startTournament());
+      },
+
+      showRound(options, progress) {
+        const pct = ((progress.current - 1) / progress.total) * 100;
+
+        const cardsHtml = options.map((color, i) => `
+            <div class="color-card"
+                 data-index="${i}"
+                 style="background-color:${color.hex};"
+                 role="button"
+                 tabindex="0"
+                 aria-label="${color.name} / ${color.nameEn} 선택">
+              <div class="color-card__info">
+                <span class="color-card__name">${color.name}</span>
+                <span class="color-card__name-en">${color.nameEn}</span>
+              </div>
+            </div>
+          `).join('');
+
+        this._show(`
+          <section class="screen screen--round">
+            <div class="round-header">
+              <div class="round-meta">
+                <span class="round-label">오늘의 컬러</span>
+                <span class="round-count">${progress.current} / ${progress.total}</span>
+              </div>
+              <div class="progress-bar" role="progressbar"
+                   aria-valuenow="${progress.current}" aria-valuemax="${progress.total}">
+                <div class="progress-bar__fill" style="width:0%"></div>
+              </div>
+              <p class="round-prompt">지금 당신에게 끌리는 색은?</p>
+            </div>
+            <div class="color-grid">${cardsHtml}</div>
+          </section>
+        `);
+
+        // Animate progress bar
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const fill = this._root.querySelector('.progress-bar__fill');
+            if (fill) fill.style.width = pct + '%';
+          });
+        });
+
+        // Event delegation
+        const grid = this._root.querySelector('.color-grid');
+        const handleSelect = (e) => {
+          const card = e.target.closest('.color-card');
+          if (!card || card.dataset.selecting) return;
+          card.dataset.selecting = '1';
+          const idx = parseInt(card.dataset.index, 10);
+          card.classList.add('color-card--selected');
+          setTimeout(() => App.handlePick(options[idx]), 320);
+        };
+
+        grid.addEventListener('click', handleSelect);
+        grid.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSelect(e);
+          }
+        });
+      },
+
+      async showResult(winner) {
+        const products = await ProductService.getProducts(winner.hex, winner.category);
+
+        // All colors in the same category as the winner
+        const categoryColors = COLOR_DATA.filter(c => c.category === winner.category);
+
+        /* ── Category palette HTML ── */
+        const catColorsHtml = categoryColors.map(c => {
+          const isWinner = c.hex === winner.hex;
+          return `
+            <div class="cat-color-row">
+              <div class="cat-color-swatch ${isWinner ? 'cat-color-swatch--winner' : ''}"
+                   style="background:${c.hex};"
+                   title="${c.hex}"></div>
+              <div class="cat-color-info">
+                <span class="cat-color-name">
+                  ${c.name}
+                  ${isWinner ? '<span class="cat-color-winner-badge">오늘의 컬러</span>' : ''}
+                </span>
+                <span class="cat-color-hex">${c.nameEn} · ${c.hex}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        /* ── Complementary palette HTML ── */
+        const compHtml = winner.complementary.map(hex => `
+          <div class="comp-swatch comp-swatch--secondary">
+            <div class="comp-swatch__circle" style="background:${hex};" title="${hex}"></div>
+            <span class="comp-swatch__hex">${hex}</span>
+          </div>
+        `).join('');
+
+        /* ── Products HTML ── */
+        const productsHtml = products.map(p => `
+          <div class="product-card">
+            <div class="product-card__image" style="background-color:${winner.hex}22;">
+              ${p.image
+                ? `<img src="${p.image}" alt="${p.name}" loading="lazy">`
+                : `<span class="product-card__placeholder" aria-hidden="true">✦</span>`}
+            </div>
+            <div class="product-card__body">
+              <p class="product-card__name">${p.name}</p>
+              <p class="product-card__price">${p.price}</p>
+              <a href="${p.link}" class="product-card__link" target="_blank" rel="noopener">보러가기</a>
+            </div>
+          </div>
+        `).join('');
+
+        /* ── Keywords ── */
+        const tagsHtml = winner.keywords.map(k => `<span class="tag">${k}</span>`).join('');
+
+        /* ── Sentence: replace \n with <br> ── */
+        const sentenceHtml = winner.sentence.replace(/\n/g, '<br>');
+
+        this._show(`
+          <section class="screen screen--result">
+            <div class="result-color-band" style="background-color:${winner.hex};" aria-hidden="true">
+              <div class="result-color-band__inner">
+                <span class="result-color-band__badge">${winner.category}</span>
+              </div>
+            </div>
+
+            <div class="result-content">
+              <h2 class="result-name">${winner.name}</h2>
+
+              <p class="result-sentence">${sentenceHtml}</p>
+
+              <div class="result-keywords" role="list" aria-label="무드 키워드">
+                ${tagsHtml}
+              </div>
+
+              <div class="category-palette">
+                <p class="section-label">${winner.category} 컬러 팔레트</p>
+                <div class="category-colors">${catColorsHtml}</div>
+              </div>
+
+              <div class="comp-palette">
+                <p class="section-label">어울리는 보조 컬러</p>
+                <div class="comp-row">
+                  <div class="comp-swatch comp-swatch--main">
+                    <div class="comp-swatch__circle" style="background:${winner.hex};"></div>
+                    <span class="comp-swatch__hex">${winner.hex}</span>
+                  </div>
+                  ${compHtml}
+                </div>
+              </div>
+
+              <div class="product-section">
+                <p class="section-label">오늘의 당신에게 어울리는 제품</p>
+                <div class="product-grid">${productsHtml}</div>
+              </div>
+
+              <div class="result-actions">
+                <button class="btn btn--primary" id="shareBtn">결과 공유하기</button>
+                <button class="btn btn--ghost" id="retryBtn">다시 시작하기</button>
+              </div>
+            </div>
+          </section>
+        `);
+
+        document.getElementById('shareBtn').addEventListener('click', () => ShareUtils.share(winner));
+        document.getElementById('retryBtn').addEventListener('click', () => App.reset());
+      }
+    };
+
+    /* ================================================
+       SHARE UTILS
+    ================================================ */
+    const ShareUtils = {
+      async share(winner) {
+        const text = `오늘의 나는 "${winner.name}" 🎨\n\n${winner.sentence}\n\n${winner.keywords.map(k => '#' + k).join(' ')}\n#오늘의컬러 #ColorMood`;
+        const url = window.location.href;
+
+        if (navigator.share) {
+          try {
+            await navigator.share({ title: '오늘의 컬러 무드', text, url });
+            return;
+          } catch (_) { /* cancelled */ }
+        }
+
+        try {
+          await navigator.clipboard.writeText(text + '\n\n' + url);
+          this._toast('클립보드에 복사되었어요 ✓');
+        } catch (_) {
+          this._toast('공유 텍스트를 직접 복사해 주세요.');
+        }
+      },
+
+      _toast(msg) {
+        document.querySelectorAll('.toast').forEach(t => t.remove());
+        const el = document.createElement('div');
+        el.className = 'toast';
+        el.textContent = msg;
+        el.setAttribute('role', 'status');
+        document.body.appendChild(el);
+        requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('toast--visible')));
+        setTimeout(() => {
+          el.classList.remove('toast--visible');
+          setTimeout(() => el.remove(), 400);
+        }, 2800);
+      }
+    };
+
+    /* ================================================
+       APP CONTROLLER
+    ================================================ */
+    const App = {
+      init() {
+        UIRenderer.init('app');
+        UIRenderer.showIntro();
+      },
+
+      startTournament() {
+        TournamentEngine.init();
+        this._nextRound();
+      },
+
+      _nextRound() {
+        const options = TournamentEngine.nextRound();
+        const progress = TournamentEngine.getProgress();
+        UIRenderer.showRound(options, progress);
+      },
+
+      handlePick(colorObj) {
+        const result = TournamentEngine.pick(colorObj);
+        if (result.done) {
+          UIRenderer.showResult(result.winner);
+        } else {
+          this._nextRound();
+        }
+      },
+
+      reset() {
+        UIRenderer.showIntro();
+      }
+    };
+
+    /* ── Bootstrap ── */
+    document.addEventListener('DOMContentLoaded', () => App.init());
+
+  })();
+  </script>
+</body>
+</html>
